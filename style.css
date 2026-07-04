@@ -176,29 +176,3 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
-
-/* Dark mode */
-body.dark-mode {
-    background-color: #121212;
-    color: #ffffff;
-}
-
-/* Example card */
-.goal-card {
-    background: white;
-    color: black;
-    transition: 0.3s;
-}
-
-body.dark-mode .goal-card {
-    background: #1f1f1f;
-    color: white;
-}
-
-/* Button */
-#themeToggle {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
