@@ -1,14 +1,28 @@
 let goals = JSON.parse(localStorage.getItem("goals")) || [];
+let editingGoalId = null;
+
 const trailEl = document.getElementById("trail");
 const emptyStateEl = document.getElementById("emptyState");
 const formOverlay = document.getElementById("formOverlay");
 const goalForm = document.getElementById("goalForm");
 const openFormBtn = document.getElementById("openFormBtn");
 const cancelFormBtn = document.getElementById("cancelFormBtn");
+const formTitle = document.getElementById("formTitle");
+const submitFormBtn = document.getElementById("submitFormBtn");
+const milestoneField = document.getElementById("milestoneField");
+
+const titleInput = document.getElementById("titleInput");
+const categoryInput = document.getElementById("categoryInput");
+const deadlineInput = document.getElementById("deadlineInput");
+const milestoneInput = document.getElementById("milestoneInput");
 
 const statTotal = document.getElementById("statTotal");
 const statDone = document.getElementById("statDone");
 const statAvg = document.getElementById("statAvg");
+
+function saveGoals() {
+  localStorage.setItem("goals", JSON.stringify(goals));
+}
 
 function progressOf(goal) {
   if (!goal.milestones.length) return 0;
@@ -68,69 +82,136 @@ function renderGoalCard(goal) {
     <div class="goal-body">
       <div class="goal-top">
         <h3 class="goal-title">${escapeHtml(goal.title)}</h3>
-        <button class="icon-btn" data-action="delete" title="Remove goal">✕</button>
+        <div class="goal-actions">
+          <button class="icon-btn edit" data-action="edit" title="Edit goal">Edit</button>
+          <button class="icon-btn" data-action="delete" title="Remove goal">x</button>
+        </div>
       </div>
       <div class="goal-meta">
         <span class="tag">${escapeHtml(goal.category)}</span>
-        ${deadlineInfo ? `<span class="tag deadline ${deadlineInfo.overdue && !complete ? "overdue" : ""}">${deadlineInfo.overdue && !complete ? "Overdue · " : "By "}${deadlineInfo.label}</span>` : ""}
+        ${deadlineInfo ? `<span class="tag deadline ${deadlineInfo.overdue && !complete ? "overdue" : ""}">${deadlineInfo.overdue && !complete ? "Overdue - " : "By "}${deadlineInfo.label}</span>` : ""}
       </div>
       <ul class="milestones">
         ${goal.milestones.map(m => `
           <li class="milestone ${m.done ? "done" : ""}" data-milestone-id="${m.id}">
             <input type="checkbox" ${m.done ? "checked" : ""} data-action="toggle-milestone">
-            <span>${escapeHtml(m.text)}</span>
+            <span class="milestone-text">${escapeHtml(m.text)}</span>
+            <div class="milestone-actions">
+              <button class="mini-btn" data-action="edit-milestone" title="Edit sub-goal">Edit</button>
+              <button class="mini-btn danger" data-action="delete-milestone" title="Delete sub-goal">Delete</button>
+            </div>
           </li>
         `).join("")}
       </ul>
       <div class="add-milestone">
-        <input type="text" placeholder="Add a milestone…" data-action="milestone-input">
+        <input type="text" placeholder="Add a milestone..." data-action="milestone-input">
         <button data-action="add-milestone">+</button>
       </div>
     </div>
   `;
 
-card.querySelector('[data-action="delete"]').addEventListener("click", () => {
-  goals = goals.filter(g => g.id !== goal.id);
-  localStorage.setItem("goals", JSON.stringify(goals));
-  render();
-});
+  card.querySelector('[data-action="edit"]').addEventListener("click", () => {
+    openGoalForm(goal);
+  });
+
+  card.querySelector('[data-action="delete"]').addEventListener("click", () => {
+    goals = goals.filter(g => g.id !== goal.id);
+    saveGoals();
+    render();
+  });
 
   card.querySelectorAll('[data-action="toggle-milestone"]').forEach(cb => {
     cb.addEventListener("change", () => {
       const li = cb.closest("[data-milestone-id]");
       const milestone = goal.milestones.find(m => m.id === li.dataset.milestoneId);
-    milestone.done = cb.checked;
-localStorage.setItem("goals", JSON.stringify(goals));
-render();
+      milestone.done = cb.checked;
+      saveGoals();
+      render();
     });
   });
 
-  const milestoneInput = card.querySelector('[data-action="milestone-input"]');
-  const addMilestoneBtn = card.querySelector('[data-action="add-milestone"]');
-
-function addMilestone() {
-  const text = milestoneInput.value.trim();
-  if (!text) return;
-
-  goal.milestones.push({
-    id: crypto.randomUUID(),
-    text,
-    done: false
+  card.querySelectorAll('[data-action="edit-milestone"]').forEach(btn => {
+    btn.addEventListener("click", () => {
+      const li = btn.closest("[data-milestone-id]");
+      const milestone = goal.milestones.find(m => m.id === li.dataset.milestoneId);
+      renderMilestoneEditor(li, milestone, goal);
+    });
   });
 
-  localStorage.setItem("goals", JSON.stringify(goals));
-  render();
-}
+  card.querySelectorAll('[data-action="delete-milestone"]').forEach(btn => {
+    btn.addEventListener("click", () => {
+      const li = btn.closest("[data-milestone-id]");
+      goal.milestones = goal.milestones.filter(m => m.id !== li.dataset.milestoneId);
+      saveGoals();
+      render();
+    });
+  });
+
+  const newMilestoneInput = card.querySelector('[data-action="milestone-input"]');
+  const addMilestoneBtn = card.querySelector('[data-action="add-milestone"]');
+
+  function addMilestone() {
+    const text = newMilestoneInput.value.trim();
+    if (!text) return;
+
+    goal.milestones.push({
+      id: crypto.randomUUID(),
+      text,
+      done: false
+    });
+
+    saveGoals();
+    render();
+  }
+
   addMilestoneBtn.addEventListener("click", addMilestone);
 
-milestoneInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    addMilestone();
-  }
-});
-  
+  newMilestoneInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addMilestone();
+    }
+  });
+
   return card;
+}
+
+function renderMilestoneEditor(li, milestone, goal) {
+  li.classList.add("editing");
+  li.innerHTML = `
+    <input class="milestone-edit-input" type="text" value="${escapeAttribute(milestone.text)}">
+    <div class="milestone-actions">
+      <button class="mini-btn save" data-action="save-milestone">Save</button>
+      <button class="mini-btn" data-action="cancel-milestone">Cancel</button>
+    </div>
+  `;
+
+  const input = li.querySelector(".milestone-edit-input");
+  input.focus();
+  input.select();
+
+  function saveMilestone() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    milestone.text = text;
+    saveGoals();
+    render();
+  }
+
+  li.querySelector('[data-action="save-milestone"]').addEventListener("click", saveMilestone);
+  li.querySelector('[data-action="cancel-milestone"]').addEventListener("click", render);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveMilestone();
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      render();
+    }
+  });
 }
 
 function escapeHtml(str) {
@@ -139,41 +220,70 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-openFormBtn.addEventListener("click", () => {
-  formOverlay.classList.add("open");
-  document.getElementById("titleInput").focus();
-});
+function escapeAttribute(str) {
+  return escapeHtml(str).replace(/"/g, "&quot;");
+}
 
+function openGoalForm(goal = null) {
+  editingGoalId = goal ? goal.id : null;
+  formTitle.textContent = goal ? "Edit goal" : "Plot a new goal";
+  submitFormBtn.textContent = goal ? "Save changes" : "Add goal";
+  milestoneField.style.display = goal ? "none" : "block";
+
+  titleInput.value = goal ? goal.title : "";
+  categoryInput.value = goal ? goal.category : "Personal";
+  deadlineInput.value = goal ? goal.deadline : "";
+  milestoneInput.value = "";
+
+  formOverlay.classList.add("open");
+  titleInput.focus();
+}
+
+function closeForm() {
+  formOverlay.classList.remove("open");
+  editingGoalId = null;
+  formTitle.textContent = "Plot a new goal";
+  submitFormBtn.textContent = "Add goal";
+  milestoneField.style.display = "block";
+  goalForm.reset();
+}
+
+openFormBtn.addEventListener("click", () => openGoalForm());
 cancelFormBtn.addEventListener("click", closeForm);
 formOverlay.addEventListener("click", e => {
   if (e.target === formOverlay) closeForm();
 });
 
-function closeForm() {
-  formOverlay.classList.remove("open");
-  goalForm.reset();
-}
-
 goalForm.addEventListener("submit", e => {
   e.preventDefault();
 
-  const title = document.getElementById("titleInput").value.trim();
-  const category = document.getElementById("categoryInput").value;
-  const deadline = document.getElementById("deadlineInput").value;
-  const milestoneText = document.getElementById("milestoneInput").value.trim();
+  const title = titleInput.value.trim();
+  const category = categoryInput.value;
+  const deadline = deadlineInput.value;
+  const milestoneText = milestoneInput.value.trim();
 
   if (!title) return;
 
-const newGoal = {
-  id: crypto.randomUUID(),
-  title,
-  category,
-  deadline,
-  milestones: milestoneText
-    ? [{ id: crypto.randomUUID(), text: milestoneText, done: false }]
-    : []
-};
-goals.push(newGoal);
-localStorage.setItem("goals", JSON.stringify(goals));
-closeForm();
+  if (editingGoalId) {
+    goals = goals.map(goal => goal.id === editingGoalId
+      ? { ...goal, title, category, deadline }
+      : goal);
+  } else {
+    const newGoal = {
+      id: crypto.randomUUID(),
+      title,
+      category,
+      deadline,
+      milestones: milestoneText
+        ? [{ id: crypto.randomUUID(), text: milestoneText, done: false }]
+        : []
+    };
+    goals.push(newGoal);
+  }
+
+  saveGoals();
+  closeForm();
+  render();
+});
+
 render();

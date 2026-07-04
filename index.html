@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<<link rel="stylesheet" href="style.css">>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Waypoints — Goal Tracker</title>
@@ -40,7 +40,7 @@
 
     <div class="form-overlay" id="formOverlay">
       <form class="goal-form" id="goalForm">
-        <h2>Plot a new goal</h2>
+        <h2 id="formTitle">Plot a new goal</h2>
 
         <label for="titleInput">Goal</label>
         <input type="text" id="titleInput" placeholder="e.g. Run a 10k" required>
@@ -62,12 +62,14 @@
           </div>
         </div>
 
-        <label for="milestoneInput">First milestone (optional)</label>
-        <input type="text" id="milestoneInput" placeholder="e.g. Run a 5k without stopping">
+        <div id="milestoneField">
+          <label for="milestoneInput">First milestone (optional)</label>
+          <input type="text" id="milestoneInput" placeholder="e.g. Run a 5k without stopping">
+        </div>
 
         <div class="form-actions">
           <button type="button" class="btn-ghost" id="cancelFormBtn">Cancel</button>
-          <button type="submit" class="btn-primary">Add goal</button>
+          <button type="submit" class="btn-primary" id="submitFormBtn">Add goal</button>
         </div>
       </form>
     </div>
