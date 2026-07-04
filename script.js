@@ -173,13 +173,7 @@ const newGoal = {
     ? [{ id: crypto.randomUUID(), text: milestoneText, done: false }]
     : []
 };
-
 goals.push(newGoal);
 localStorage.setItem("goals", JSON.stringify(goals));
-
-localStorage.setItem("goals", JSON.stringify(goals));
 closeForm();
-render();
-});
-
 render();
