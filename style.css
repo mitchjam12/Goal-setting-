@@ -176,3 +176,90 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+/* ===================================
+   DARK MODE
+=================================== */
+
+body.dark-mode {
+  --bg: #1B211D;
+  --surface: #283029;
+  --ink: #F4F1E8;
+  --muted: #B7BCAF;
+  --line: #4A534B;
+
+  /* Keep the Waypoints colour palette */
+  --primary: #4F8D72;
+  --primary-dark: #66A88B;
+  --accent: #D5A257;
+  --danger: #D06B57;
+}
+
+/* Smooth transitions */
+body,
+.goal-card,
+.stat,
+.goal-form,
+.goal-form input,
+.goal-form select,
+.add-milestone input,
+.add-milestone button,
+.btn-primary,
+.btn-ghost,
+.tag,
+.site-footer {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Dark overlay */
+body.dark-mode .form-overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Better looking tags */
+body.dark-mode .tag {
+  background: rgba(79, 141, 114, 0.22);
+  color: #DFF4E8;
+}
+
+body.dark-mode .tag.deadline {
+  background: rgba(213, 162, 87, 0.22);
+  color: #FFD992;
+}
+
+body.dark-mode .tag.overdue {
+  background: rgba(208, 107, 87, 0.22);
+  color: #FFB4A4;
+}
+
+/* Progress circle */
+body.dark-mode .ring-wrap {
+  color: var(--ink);
+}
+
+/* Footer */
+body.dark-mode .site-footer {
+  border-top-color: var(--line);
+}
+
+/* Theme Toggle Button */
+#themeToggle {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+#themeToggle:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
